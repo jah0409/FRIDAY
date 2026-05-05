@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRIDAY — Stark Industries Personal Assistant</title>
+  <meta name="description" content="FRIDAY — personal AI assistant for Mohammad Javed." />
+  <style>
+    /* ---------- Reset & base ---------- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Orbitron', 'Segoe UI', system-ui, sans-serif;
+      color: #cfeaff;
+      background:
+        radial-gradient(ellipse at top, #001d3d 0%, #000814 60%, #000 100%);
+      overflow: hidden;
+      letter-spacing: 0.5px;
+    }
+
+    /* Subtle animated grid in the background */
+    body::before {
+      content: "";
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 212, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.06) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: drift 30s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes drift {
+      0%   { transform: translate(0, 0); }
+      100% { transform: translate(-48px, -48px); }
+    }
+
+    /* ---------- Layout ---------- */
+    .app {
+      position: relative;
+      display: grid;
+      grid-template-columns: 320px 1fr 320px;
+      grid-template-rows: 70px 1fr auto;
+      grid-template-areas:
+        "header  header  header"
+        "left    center  right"
+        "footer  footer  footer";
+      height: 100vh;
+      z-index: 1;
+    }
+
+    /* ---------- Header ---------- */
+    header {
+      grid-area: header;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      border-bottom: 1px solid rgba(0, 212, 255, 0.25);
+      background: rgba(0, 12, 28, 0.6);
+      backdrop-filter: blur(8px);
+    }
+    .brand {
+      display: flex; align-items: baseline; gap: 10px;
+    }
+    .brand .logo {
+      font-size: 22px; font-weight: 800;
+      color: #00d4ff;
+      text-shadow: 0 0 12px rgba(0, 212, 255, 0.7);
+      letter-spacing: 4px;
+    }
+    .brand .sub {
+      font-size: 11px; color: #6fb3d2;
+      text-transform: uppercase; letter-spacing: 3px;
+    }
+    .header-meta {
+      display: flex; gap: 18px; font-size: 12px; color: #6fb3d2;
+      text-transform: uppercase;
+    }
+    .header-meta span b { color: #00d4ff; font-weight: 600; }
+
+    /* ---------- Holographic panels ---------- */
+    .panel {
+      margin: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg,
+        rgba(0, 30, 60, 0.55), rgba(0, 12, 28, 0.55));
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      border-radius: 10px;
+      box-shadow:
+        0 0 24px rgba(0, 212, 255, 0.1) inset,
+        0 0 18px rgba(0, 212, 255, 0.15);
+      backdrop-filter: blur(6px);
+    }
+    .panel h3 {
+      font-size: 12px;
+      color: #00d4ff;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+      padding-bottom: 8px;
+    }
+    .panel ul { list-style: none; }
+    .panel li {
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex; justify-content: space-between;
+      color: #9fd6f5;
+    }
+    .panel li b { color: #fff; font-weight: 500; }
+    .ok    { color: #00ffa0 !important; }
+    .warn  { color: #ffb000 !important; }
+
+    .left  { grid-area: left;  overflow-y: auto; }
+    .right { grid-area: right; overflow-y: auto; }
+
+    /* ---------- Center: arc reactor + chat ---------- */
+    .center {
+      grid-area: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 18px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Arc reactor */
+    .reactor {
+      position: relative;
+      width: 220px; height: 220px;
+      margin: 8px 0 14px;
+      flex-shrink: 0;
+    }
+    .reactor .ring {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 212, 255, 0.35);
+      box-shadow:
+        0 0 30px rgba(0, 212, 255, 0.35),
+        0 0 60px rgba(0, 212, 255, 0.2) inset;
+    }
+    .reactor .ring.r2 {
+      inset: 22px;
+      border-color: rgba(0, 212, 255, 0.55);
+      animation: spin 16s linear infinite;
+    }
+    .reactor .ring.r3 {
+      inset: 44px;
+      border-style: dashed;
+      animation: spin 9s linear infinite reverse;
+    }
+    .reactor .core {
+      position: absolute; inset: 70px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, #ffffff 0%, #aef2ff 25%,
+                        #00d4ff 60%, #003b66 100%);
+      box-shadow:
+        0 0 40px #00d4ff,
+        0 0 80px rgba(0, 212, 255, 0.6),
+        0 0 120px rgba(0, 212, 255, 0.4);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes spin  { to { transform: rotate(360deg); } }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1);   opacity: 1;   }
+      50%      { transform: scale(1.06); opacity: 0.85; }
+    }
+
+    /* Chat area */
+    .chat {
+      width: 100%;
+      max-width: 760px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: rgba(0, 12, 28, 0.5);
+      border: 1px solid rgba(0, 212, 255, 0.25);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+    .messages::-webkit-scrollbar { width: 6px; }
+    .messages::-webkit-scrollbar-thumb {
+      background: rgba(0, 212, 255, 0.3); border-radius: 3px;
+    }
+    .msg {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.5;
+      animation: fade 0.3s ease;
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: rgba(0, 212, 255, 0.18);
+      border: 1px solid rgba(0, 212, 255, 0.4);
+      color: #fff;
+    }
+    .msg.friday {
+      align-self: flex-start;
+      background: rgba(0, 30, 60, 0.6);
+      border: 1px solid rgba(0, 212, 255, 0.25);
+      color: #cfeaff;
+    }
+    .msg .who {
+      display: block;
+      font-size: 10px;
+      color: #00d4ff;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---------- Footer / input ---------- */
+    footer {
+      grid-area: footer;
+      padding: 14px 28px 22px;
+      background: rgba(0, 12, 28, 0.7);
+      border-top: 1px solid rgba(0, 212, 255, 0.25);
+      backdrop-filter: blur(8px);
+    }
+    .composer {
+      display: flex;
+      gap: 10px;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .composer input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 212, 255, 0.4);
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 14px;
+      color: #fff;
+      font-family: inherit;
+      outline: none;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .composer input::placeholder { color: #4f8fb1; }
+    .composer input:focus {
+      border-color: #00d4ff;
+      box-shadow: 0 0 16px rgba(0, 212, 255, 0.5);
+    }
+    .composer button {
+      background: linear-gradient(135deg, #0099cc, #00d4ff);
+      color: #001d3d;
+      border: none;
+      border-radius: 8px;
+      padding: 0 24px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      font-family: inherit;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+    .composer button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 0 18px rgba(0, 212, 255, 0.6);
+    }
+    .composer button:disabled {
+      opacity: 0.5; cursor: not-allowed;
+    }
+    .composer .mic {
+      background: transparent;
+      color: #00d4ff;
+      border: 1px solid rgba(0, 212, 255, 0.4);
+      padding: 0 16px;
+      font-size: 18px;
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1000px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "header"
+          "center"
+          "footer";
+      }
+      .left, .right { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ============== HEADER ============== -->
+    <header>
+      <div class="brand">
+        <span class="logo">FRIDAY</span>
+        <span class="sub">Stark Industries · Personal Assistant</span>
+      </div>
+      <div class="header-meta">
+        <span>OWNER: <b>Mohammad Javed</b></span>
+        <span id="clock">--:--:--</span>
+        <span>STATUS: <b class="ok">ONLINE</b></span>
+      </div>
+    </header>
+
+    <!-- ============== LEFT PANEL ============== -->
+    <aside class="left">
+      <div class="panel">
+        <h3>System Status</h3>
+        <ul>
+          <li>Core <b class="ok">Nominal</b></li>
+          <li>Memory <b class="ok">Active</b></li>
+          <li>Voice I/O <b class="ok">Ready</b></li>
+          <li>Skills <b class="ok">12 loaded</b></li>
+          <li>Network <b class="ok">Stable</b></li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h3>Language</h3>
+        <ul>
+          <li>Default <b>Hinglish</b></li>
+          <li>English <b class="ok">✓</b></li>
+          <li>हिन्दी <b class="ok">✓</b></li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h3>Capabilities</h3>
+        <ul>
+          <li>Scheduling</li>
+          <li>System Control</li>
+          <li>Web &amp; News</li>
+          <li>Notes &amp; Memory</li>
+          <li>Self-Build Skills</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- ============== CENTER: REACTOR + CHAT ============== -->
+    <section class="center">
+      <div class="reactor" aria-hidden="true">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <div class="core"></div>
+      </div>
+
+      <div class="chat">
+        <div class="messages" id="messages">
+          <div class="msg friday">
+            <span class="who">FRIDAY</span>
+            Good day, Boss. FRIDAY online and ready. Aap kuch bhi pooch sakte ho —
+            English, Hindi, ya Hinglish, jo bhi comfortable ho.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== RIGHT PANEL ============== -->
+    <aside class="right">
+      <div class="panel">
+        <h3>Today</h3>
+        <ul>
+          <li id="todayDate">--</li>
+          <li>Mood <b class="ok">Focused</b></li>
+          <li>Reminders <b>0</b></li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h3>Quick Actions</h3>
+        <ul>
+          <li><a href="#" class="qa" data-q="Mumbai ka weather batao">🌤 Weather</a></li>
+          <li><a href="#" class="qa" data-q="Top news headlines">📰 Headlines</a></li>
+          <li><a href="#" class="qa" data-q="Kal subah 7 baje meeting yaad dilana">⏰ Reminder</a></li>
+          <li><a href="#" class="qa" data-q="System status check">🛠 Status</a></li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h3>Evolution</h3>
+        <ul>
+          <li>Facts learned <b id="factCount">0</b></li>
+          <li>Journal entries <b id="journalCount">0</b></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- ============== FOOTER / COMPOSER ============== -->
+    <footer>
+      <form class="composer" id="composer">
+        <button type="button" class="mic" id="micBtn" title="Voice input">🎙</button>
+        <input
+          id="input"
+          type="text"
+          autocomplete="off"
+          placeholder="Boss, FRIDAY se kuch bhi poocho... (Press Enter to send)" />
+        <button type="submit" id="sendBtn">Send</button>
+      </form>
+    </footer>
+  </div>
+
+  <script>
+    // ---------- Live clock + date ----------
+    const clockEl = document.getElementById('clock');
+    const dateEl  = document.getElementById('todayDate');
+    function tick() {
+      const d = new Date();
+      clockEl.textContent = d.toLocaleTimeString('en-IN', { hour12: false });
+      dateEl.textContent  = d.toLocaleDateString('en-IN', {
+        weekday: 'short', day: '2-digit', month: 'short', year: 'numeric'
+      });
+    }
+    tick();
+    setInterval(tick, 1000);
+
+    // ---------- Chat plumbing ----------
+    const messagesEl = document.getElementById('messages');
+    const inputEl    = document.getElementById('input');
+    const sendBtn    = document.getElementById('sendBtn');
+    const formEl     = document.getElementById('composer');
+
+    function addMessage(text, who = 'friday') {
+      const div = document.createElement('div');
+      div.className = `msg ${who}`;
+      const label = document.createElement('span');
+      label.className = 'who';
+      label.textContent = who === 'user' ? 'You' : 'FRIDAY';
+      div.appendChild(label);
+      div.appendChild(document.createTextNode(text));
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return div;
+    }
+
+    async function sendMessage(text) {
+      if (!text || !text.trim()) return;
+      addMessage(text, 'user');
+      inputEl.value = '';
+      sendBtn.disabled = true;
+
+      const thinking = addMessage('...', 'friday');
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text }),
+        });
+        const data = await res.json();
+        thinking.lastChild.textContent =
+          data.reply || data.error || '(no reply)';
+      } catch (err) {
+        thinking.lastChild.textContent =
+          'Boss, server se connect nahi ho paaya. Network check karo.';
+        console.error(err);
+      } finally {
+        sendBtn.disabled = false;
+        inputEl.focus();
+      }
+    }
+
+    formEl.addEventListener('submit', (e) => {
+      e.preventDefault();
+      sendMessage(inputEl.value);
+    });
+
+    // ---------- Quick actions ----------
+    document.querySelectorAll('.qa').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        sendMessage(a.dataset.q);
+      });
+    });
+
+    // ---------- Voice input (Web Speech API where available) ----------
+    const micBtn = document.getElementById('micBtn');
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR) {
+      const rec = new SR();
+      rec.lang = 'en-IN';
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      micBtn.addEventListener('click', () => {
+        try { rec.start(); micBtn.style.color = '#ff5577'; }
+        catch (e) { /* already running */ }
+      });
+      rec.onresult = (e) => {
+        const text = e.results[0][0].transcript;
+        inputEl.value = text;
+        sendMessage(text);
+      };
+      rec.onend = () => { micBtn.style.color = '#00d4ff'; };
+    } else {
+      micBtn.disabled = true;
+      micBtn.title = 'Voice input not supported in this browser';
+    }
+
+    // ---------- Fetch evolution stats (best-effort) ----------
+    fetch('/api/stats').then(r => r.ok ? r.json() : null).then(data => {
+      if (!data) return;
+      document.getElementById('factCount').textContent    = data.facts ?? 0;
+      document.getElementById('journalCount').textContent = data.journal ?? 0;
+    }).catch(() => {});
+  </script>
+</body>
+</html>

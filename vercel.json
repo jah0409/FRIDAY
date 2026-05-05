@@ -1,0 +1,39 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "// description": "FRIDAY deployment config. Static UI is served from public/, the Flask serverless function lives at api/index.py. The rewrite below sends every /api/* request into the Flask app so it can do its own internal routing (/api/chat, /api/health, /api/stats).",
+
+  "buildCommand": null,
+  "installCommand": "pip install -r api/requirements.txt",
+  "outputDirectory": "public",
+
+  "functions": {
+    "api/index.py": {
+      "runtime": "@vercel/python@4.3.0",
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  },
+
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    }
+  ]
+}
