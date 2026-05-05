@@ -1,0 +1,33 @@
+{
+  "owner": {
+    "name": "Mohammad Javed",
+    "address_as": "Boss",
+    "timezone": "Asia/Kolkata",
+    "city": "Mumbai",
+    "preferred_language": "hinglish"
+  },
+  "assistant": {
+    "name": "Friday",
+    "wake_word": "friday",
+    "voice_rate": 185,
+    "voice_engine": "pyttsx3",
+    "tts_lang_hint": "en-IN"
+  },
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-opus-4-7",
+    "api_key_env": "ANTHROPIC_API_KEY",
+    "max_tokens": 1024,
+    "temperature": 0.6
+  },
+  "evolution": {
+    "daily_journal": true,
+    "journal_time": "23:30",
+    "memory_summary_every_messages": 25
+  },
+  "skills": {
+    "auto_load": true,
+    "allow_self_build": true,
+    "self_build_sandbox": true
+  }
+}

@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+data/*.db
+data/*.jsonl
+logs/*.log
+config/config.json
+skills/_generated/*.py
+!skills/_generated/__init__.py
+.pytest_cache/
+.DS_Store
+*.egg-info/
